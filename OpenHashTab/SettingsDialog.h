@@ -1,4 +1,4 @@
-//    Copyright 2019-2021 namazso <admin@namazso.eu>
+//    Copyright 2019-2023 namazso <admin@namazso.eu>
 //    This file is part of OpenHashTab.
 //
 //    OpenHashTab is free software: you can redistribute it and/or modify
@@ -15,12 +15,12 @@
 //    along with OpenHashTab.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
+#include "hash_colors.h"
 #include "wnd.h"
 
 struct Settings;
 
-class SettingsDialog
-{
+class SettingsDialog {
   HWND _hwnd;
 
   MAKE_IDC_MEMBER(_hwnd, BUTTON_CHECK_FOR_UPDATES);
@@ -33,14 +33,24 @@ class SettingsDialog
   MAKE_IDC_MEMBER(_hwnd, CHECK_CLIPBOARD_AUTOENABLE_IF_NONE);
   MAKE_IDC_MEMBER(_hwnd, CHECK_CLIPBOARD_AUTOENABLE_EXCLUSIVE);
 
+  MAKE_IDC_MEMBER(_hwnd, PROJECT_NAME);
+
+  HWND _samples[std::size(HASH_COLOR_SETTING_MAP)]{};
+
   Settings* _settings;
-  utl::UniqueFont _font{ utl::GetDPIScaledFont() };
+  utl::UniqueFont _font{utl::GetDPIScaledFont()};
   bool _done_setup = false;
 
   void UpdateCheckboxAvailability();
+  void UpdateColorItems();
 
 public:
-  SettingsDialog(HWND handle, void* settings) : _hwnd(handle), _settings((Settings*)settings) {}
+  SettingsDialog(HWND handle, void* settings)
+      : _hwnd(handle)
+      , _settings((Settings*)settings) {
+    for (size_t i = 0; i < std::size(HASH_COLOR_SETTING_MAP); ++i)
+      _samples[i] = GetDlgItem(_hwnd, HASH_COLOR_SETTING_MAP[i].settings_dlg_sample);
+  }
 
   INT_PTR DlgProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

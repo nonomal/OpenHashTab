@@ -1,16 +1,16 @@
-; Copyright 2019-2021 namazso <admin@namazso.eu>
+﻿; Copyright 2019-2023 namazso <admin@namazso.eu>
 ; This file is part of OpenHashTab.
-; 
+;
 ; OpenHashTab is free software: you can redistribute it and/or modify
 ; it under the terms of the GNU General Public License as published by
 ; the Free Software Foundation, either version 3 of the License, or
 ; (at your option) any later version.
-; 
+;
 ; OpenHashTab is distributed in the hope that it will be useful,
 ; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ; GNU General Public License for more details.
-; 
+;
 ; You should have received a copy of the GNU General Public License
 ; along with OpenHashTab.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef CI_VERSION
@@ -24,6 +24,7 @@
 #define MyAppURL        "https://github.com/namazso/OpenHashTab"
 #define MyCopyright     "(c) namazso. Licensed under GNU GPLv3 or (at your option) later."
 #define DLLName         "OpenHashTab.dll"
+#define StandaloneName  "StandaloneStub.exe"
 #define DLLCLSID        "{{23b5bdd4-7669-42b8-9cdc-beebc8a5baa9}"
 
 [Setup]
@@ -49,10 +50,18 @@ SolidCompression=yes
 WizardStyle=modern
 VersionInfoProductTextVersion={#CI_VERSION}
 VersionInfoVersion={#CI_VERSION_NUMERIC}
-ChangesAssociations = yes
+ChangesAssociations=yes
+UninstallDisplayIcon={app}\OpenHashTab.dll,0
+ArchitecturesAllowed=win64
+ArchitecturesInstallIn64BitMode=win64
+#ifdef SIGN
+SignTool=signtool $f
+SignedUninstaller=yes
+#endif
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "en"; MessagesFile: "compiler:Default.isl"
+// "English" seems to always break the default language detection with unknown reasons.
 Name: "armenian"; MessagesFile: "compiler:Languages\Armenian.isl"
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: "catalan"; MessagesFile: "compiler:Languages\Catalan.isl"
@@ -76,22 +85,38 @@ Name: "slovenian"; MessagesFile: "compiler:Languages\Slovenian.isl"
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
+Name: "ChineseSimplified"; MessagesFile: "Localization\isl\ChineseSimplified.isl"
+Name: "ChineseTraditional"; MessagesFile: "Localization\isl\ChineseTraditional.isl"
 
 [Files]
-Source: "bin\Release\Win32\*.dll"; DestDir: "{app}"; Flags: ignoreversion solidbreak restartreplace 32bit; Check: InstallArch('x86')
-Source: "bin\Release\x64\*.dll";   DestDir: "{app}"; Flags: ignoreversion solidbreak restartreplace 64bit; Check: InstallArch('x64')
-Source: "bin\Release\ARM64\*.dll"; DestDir: "{app}"; Flags: ignoreversion solidbreak restartreplace 64bit; Check: InstallArch('arm64') 
+Source: "AlgorithmsDlls\*.dll";                     DestDir: "{app}"; Flags: ignoreversion restartreplace;
+Source: "AlgorithmsDlls\*.pdb";                     DestDir: "{app}"; Flags: ignoreversion restartreplace;
+
+Source: "cmake-openhashtab-x64\OpenHashTab.dll";    DestDir: "{app}"; Flags: ignoreversion restartreplace 64bit; Check: InstallArch('x64')
+Source: "cmake-openhashtab-x64\*.exe";              DestDir: "{app}"; Flags: ignoreversion restartreplace 64bit; Check: InstallArch('x64')
+Source: "cmake-openhashtab-x64\*.pdb";              DestDir: "{app}"; Flags: ignoreversion restartreplace 64bit; Check: InstallArch('x64')
+
+Source: "cmake-openhashtab-ARM64\OpenHashTab.dll";  DestDir: "{app}"; Flags: ignoreversion restartreplace 64bit; Check: InstallArch('arm64')
+Source: "cmake-openhashtab-ARM64\*.exe";            DestDir: "{app}"; Flags: ignoreversion restartreplace 64bit; Check: InstallArch('arm64')
+Source: "cmake-openhashtab-ARM64\*.pdb";            DestDir: "{app}"; Flags: ignoreversion restartreplace 64bit; Check: InstallArch('arm64')
+
+[CustomMessages]
+GroupDescription=Optional features:
+myAssociation=Associate with known sumfile formats
+myContextMenu=Add to context menu
+
+ChineseSimplified.GroupDescription=可选操作：
+ChineseSimplified.myAssociation=关联已知的校验和文件（sumfile）格式
+ChineseSimplified.myContextMenu=添加右键菜单
 
 [Tasks]
-Name: myAssociation; Description: "Associate with known sumfile formats"; GroupDescription: "Optional features:"
-Name: myContextMenu; Description: "Add to context menu"; GroupDescription: "Optional features:"
+Name: myAssociation; Description: "{cm:myAssociation}"; GroupDescription: "{cm:GroupDescription}"
+Name: myContextMenu; Description: "{cm:myContextMenu}"; GroupDescription: "{cm:GroupDescription}"
 
 [Registry]
-#ifdef SYSTEM
-Root: HKLM32; Subkey: "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved";  ValueName: "{#DLLCLSID}"; ValueData: "{#MyAppName} Shell Extension";  ValueType: string; Check: InstallArch('x86')
-Root: HKLM64; Subkey: "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved";  ValueName: "{#DLLCLSID}"; ValueData: "{#MyAppName} Shell Extension";  ValueType: string; Check: InstallArch('x64')
-Root: HKLM64; Subkey: "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved";  ValueName: "{#DLLCLSID}"; ValueData: "{#MyAppName} Shell Extension";  ValueType: string; Check: InstallArch('arm64')
-#endif
+Root: HKLM32; Subkey: "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved";  ValueName: "{#DLLCLSID}"; ValueData: "{#MyAppName} Shell Extension";  ValueType: string; Check: InstallArch('x86'); Flags: noerror
+Root: HKLM64; Subkey: "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved";  ValueName: "{#DLLCLSID}"; ValueData: "{#MyAppName} Shell Extension";  ValueType: string; Check: InstallArch('x64'); Flags: noerror
+Root: HKLM64; Subkey: "Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved";  ValueName: "{#DLLCLSID}"; ValueData: "{#MyAppName} Shell Extension";  ValueType: string; Check: InstallArch('arm64'); Flags: noerror
 
 Root: HKA32; Subkey: "Software\Classes\CLSID\{#DLLCLSID}";  ValueName: ""; ValueData: "{#MyAppName} Shell Extension";  ValueType: string; Flags: uninsdeletekey; Check: InstallArch('x86')
 Root: HKA32; Subkey: "Software\Classes\CLSID\{#DLLCLSID}\InprocServer32";  ValueName: ""; ValueData: "{app}\{#DLLName}"; ValueType: string; Check: InstallArch('x86')
@@ -109,7 +134,7 @@ Root: HKA; Subkey: "Software\Classes\AllFilesystemObjects\shellex\PropertySheetH
 Root: HKA; Subkey: "Software\Classes\AllFilesystemObjects\shellex\ContextMenuHandlers\{#DLLCLSID}";    ValueName: ""; Flags: uninsdeletekey; ValueType: none; Tasks: myContextMenu
 
 Root: HKA; Subkey: "Software\Classes\{#MyAppName}";                     ValueData: "Checksum file";      ValueType: string; ValueName: ""; Flags: uninsdeletekey;
-Root: HKA; Subkey: "Software\Classes\{#MyAppName}\shell\open\command";  ValueData: "rundll32 ""{app}\{#DLLName}"",StandaloneEntry ""%1""";  ValueType: string; ValueName: ""
+Root: HKA; Subkey: "Software\Classes\{#MyAppName}\shell\open\command";  ValueData: """{app}\{#StandaloneName}"" ""%1""";  ValueType: string; ValueName: ""
 Root: HKA; Subkey: "Software\Classes\{#MyAppName}\DefaultIcon";         ValueData: "{app}\{#DLLName},0"; ValueType: string; ValueName: ""
 
 Root: HKA; Subkey: "Software\Classes\.md5";        ValueType: string; ValueName: ""; ValueData: "{#MyAppName}"; Flags: uninsdeletevalue; Tasks: myAssociation
@@ -160,7 +185,6 @@ begin
     case ProcessorArchitecture of
         paX86:    Result := Arch = 'x86';
         paX64:    Result := (Arch = 'x64') or (Arch = 'wow');
-        paIA64:   Result := (Arch = 'ia64') or (Arch = 'wow');
         paARM64:  Result := (Arch = 'arm64') or (Arch = 'wow');
     end;
-end; 
+end;

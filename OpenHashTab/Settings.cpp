@@ -1,4 +1,4 @@
-//    Copyright 2019-2021 namazso <admin@namazso.eu>
+//    Copyright 2019-2023 namazso <admin@namazso.eu>
 //    This file is part of OpenHashTab.
 //
 //    OpenHashTab is free software: you can redistribute it and/or modify
@@ -13,16 +13,28 @@
 //
 //    You should have received a copy of the GNU General Public License
 //    along with OpenHashTab.  If not, see <https://www.gnu.org/licenses/>.
-#include "stdafx.h"
-
 #include "Settings.h"
 
 #include "utl.h"
 
-constexpr static auto k_reg_path = L"Software\\OpenHashTab";
+static constexpr auto k_reg_path = L"Software\\OpenHashTab";
 
-DWORD detail::GetSettingDWORD(const char* name, DWORD default_value)
-{
+DWORD detail::GetMachineSettingDWORD(const char* name, DWORD default_value) {
+  DWORD value;
+  DWORD size = sizeof(value);
+  const auto status = RegGetValueW(
+    HKEY_LOCAL_MACHINE,
+    k_reg_path,
+    utl::UTF8ToWide(name).c_str(),
+    RRF_RT_REG_DWORD,
+    nullptr,
+    &value,
+    &size
+  );
+  return status == ERROR_SUCCESS ? value : default_value;
+}
+
+DWORD detail::GetSettingDWORD(const char* name, DWORD default_value) {
   DWORD value;
   DWORD size = sizeof(value);
   const auto status = RegGetValueW(
@@ -37,8 +49,7 @@ DWORD detail::GetSettingDWORD(const char* name, DWORD default_value)
   return status == ERROR_SUCCESS ? value : default_value;
 }
 
-void detail::SetSettingDWORD(const char* name, DWORD new_value)
-{
+void detail::SetSettingDWORD(const char* name, DWORD new_value) {
   RegSetKeyValueW(
     HKEY_CURRENT_USER,
     k_reg_path,
@@ -49,11 +60,10 @@ void detail::SetSettingDWORD(const char* name, DWORD new_value)
   );
 }
 
-Settings::Settings()
-{
-  bool defaults[HashAlgorithm::k_count]{};
+Settings::Settings() {
+  bool defaults[LegacyHashAlgorithm::k_count]{};
   for (const auto name : {"MD5", "SHA-1", "SHA-256", "SHA-512"})
-    defaults[HashAlgorithm::IdxByName(name)] = true;
-  for (auto i = 0u; i < HashAlgorithm::k_count; ++i)
-    algorithms[i].Init(HashAlgorithm::Algorithms()[i].GetName(), defaults[i]);
+    defaults[LegacyHashAlgorithm::IdxByName(name)] = true;
+  for (auto i = 0u; i < LegacyHashAlgorithm::k_count; ++i)
+    algorithms[i].Init(LegacyHashAlgorithm::Algorithms()[i].GetName(), defaults[i]);
 }
